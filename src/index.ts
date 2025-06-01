@@ -14,8 +14,8 @@ if (mongoose.connection) {
 const app = express();
 
 const allowedOrigins = [
-  "http://localhost:5143",
-  "https://vdt-project-frontend-8owqq3213-nguyen-ngoc-hungs-projects.vercel.app",
+  "http://localhost:5173",
+  "https://vdt-project-frontend.vercel.app",
 ];
 
 app.use(
