@@ -1,4 +1,3 @@
-import { Bookings } from "./../../../frontend/src/types/flight.type";
 import Aircraft from "../models/aircraft";
 import { AircraftType } from "../models/types";
 import { Request, Response } from "express";
