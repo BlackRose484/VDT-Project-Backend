@@ -8,12 +8,29 @@ import path from "path";
 import bodyParser from "body-parser";
 
 mongoose.connect(process.env.MONGODB_CONNECTION_STRING as string);
-if(mongoose.connection) {
+if (mongoose.connection) {
   console.log("Connected to MongoDB");
 }
 const app = express();
 
-app.use(cors());
+const allowedOrigins = [
+  "http://localhost:5143",
+  "https://vdt-project-frontend-8owqq3213-nguyen-ngoc-hungs-projects.vercel.app",
+];
+
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true,
+  })
+);
+
 app.use(cookie());
 
 app.use(express.json());
