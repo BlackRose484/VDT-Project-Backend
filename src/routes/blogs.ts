@@ -21,5 +21,6 @@ router.get("/get-latest", BlogController.getLatestBlogs);
 router.get("/get/:id", BlogController.getBlogById);
 router.post("/upload", upload.single("cover"), BlogController.uploadBlog);
 router.put("/update/:id", upload.single("cover"), BlogController.updateBlog);
+router.delete("/delete/:id", BlogController.deleteBlog);
 
 export default router;
