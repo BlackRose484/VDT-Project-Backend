@@ -180,8 +180,9 @@ const myAircraftController = {
       );
 
       const bookings = await Booking.find({ flight_id: flight._id });
+
       await Booking.updateMany(
-        { flight_id: flight._id },
+        { flight_id: flight._id, status: { $ne: "Cancelled" } },
         { status: "Delayed", cancellation_deadline: max_deadline }
       );
 
@@ -293,8 +294,6 @@ const myAircraftController = {
         result[month] = topDestinations;
       }
 
-      // Return result
-      console.log(result);
       res.status(200).json(result);
     } catch (error) {
       res.status(500).json({ message: "Internal server error", error });

@@ -30,7 +30,7 @@ const verifyToken = (req: Request, res: Response, next: NextFunction) => {
 
 // Middleware to verify if the user has an "Admin" role
 const verifyRole = (req: Request, res: Response, next: NextFunction) => {
-  if (req.role === "Admin") {
+  if (req.role === "Admin" || req.role === "Boss") {
     next(); // If the user is an admin, proceed to the next middleware or route handler
   } else {
     res.status(401).json({ message: "You are not admin" });
