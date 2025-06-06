@@ -24,7 +24,7 @@ const BlogController = {
       title,
       subtitle,
       content,
-      cover_url: req.file ? req.file.filename : undefined, // Assign cover image if uploaded
+      cover_url: req?.cloudinary ? req?.cloudinary.url : undefined, // Assign cover image if uploaded
     });
     await new_blog.save();
     res.status(200).json("Created new blog successfully");
@@ -38,7 +38,7 @@ const BlogController = {
         title,
         subtitle,
         content,
-        cover_url: req.file ? req.file.filename : blog?.cover_url, // Preserve cover image if no new file is uploaded
+        cover_url: req?.cloudinary ? req?.cloudinary.url : undefined, // Preserve cover image if no new file is uploaded
       });
       res.status(200).json("Updated blog successfully");
     } catch (error) {

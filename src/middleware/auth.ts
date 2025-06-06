@@ -6,6 +6,7 @@ declare global {
     interface Request {
       user_id: string; // Add user_id to the request object
       role: string; // Add role to the request object
+      cloudinary?: any;
     }
   }
 }
