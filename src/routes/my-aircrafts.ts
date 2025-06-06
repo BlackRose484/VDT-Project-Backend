@@ -17,6 +17,11 @@ router.put(
   "/:aircraft_id/update-flight/:flight_id",
   myAircraftController.updateFlight
 );
+router.delete(
+  "/:aircraft_id/delete-flight/:flight_id",
+  myAircraftController.deleteFlight
+);
+
 router.get("/get-revenue/:year", myAircraftController.getRevenue);
 router.get("/get-popular/:year", myAircraftController.getPopular);
 router.get(

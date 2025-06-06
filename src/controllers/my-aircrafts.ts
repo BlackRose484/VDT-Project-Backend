@@ -8,6 +8,8 @@ import User from "../models/user";
 import Booking from "../models/booking";
 import Airport from "../models/airport";
 import Ticket from "../models/ticket";
+import { sendEmail } from "../utils/email";
+import moment from "moment";
 
 const myAircraftController = {
   addAircraft: async (req: Request, res: Response) => {
@@ -15,6 +17,18 @@ const myAircraftController = {
       const newAircraft: AircraftType = req.body;
 
       newAircraft.last_updated = new Date();
+
+      // Check if aircraft with the same name already exists for the user
+      const existingAircraft = await Aircraft.findOne({
+        code: newAircraft.code,
+      });
+
+      if (existingAircraft) {
+        res.status(400).json({
+          message: "Aircraft with this code already exists for this user",
+        });
+        return;
+      }
       newAircraft.user_id = req.user_id;
 
       const aircraft = new Aircraft(newAircraft);
@@ -93,6 +107,18 @@ const myAircraftController = {
         res.status(404).json({ message: "Aircraft not found" });
         return;
       }
+
+      const flights = await Flight.find({ aircraft_id: aircraft._id });
+      for (const flight of flights) {
+        await Seat.deleteMany({ flight_id: flight._id });
+
+        const bookings = await Booking.find({ flight_id: flight._id });
+        await Ticket.deleteMany({
+          booking_id: { $in: bookings.map((b) => b._id) },
+        });
+        await Booking.deleteMany({ flight_id: flight._id });
+      }
+      await Aircraft.deleteOne({ _id: aircraft._id });
 
       res.status(200).json({ message: "Aircraft removed successfully" });
     } catch (error) {
@@ -194,9 +220,108 @@ const myAircraftController = {
       );
 
       res.status(200).json({ message: "Flight updated successfully", flight });
+
+      const users = await User.find({ _id: { $in: userIds } });
+      const emails = users.map((user) => user.email);
+
+      // Thông tin trong email chi tiết hơn
+      // Gửi email thông báo cho người dùng
+
+      const depAirport = await Airport.findById(flight.ori_airport);
+      const desAirport = await Airport.findById(flight.des_airport);
+
+      const oldDeparture = moment(flight.scheduled_departure).format(
+        "HH:mm DD/MM/YYYY"
+      );
+      const newDeparture = moment(flight.actual_departure).format(
+        "HH:mm DD/MM/YYYY"
+      );
+      const oldArrival = moment(flight.scheduled_arrival).format(
+        "HH:mm DD/MM/YYYY"
+      );
+      const newArrival = moment(flight.actual_arrival).format(
+        "HH:mm DD/MM/YYYY"
+      );
+
+      const emailContent = `
+        Chuyến bay của bạn đã bị thay đổi:
+
+        - Mã chuyến bay: ${flight._id}
+        - Từ: ${depAirport?.city || "N/A"} (${depAirport?.name || ""})
+        - Đến: ${desAirport?.city || "N/A"} (${desAirport?.name || ""})
+
+        - Thời gian khởi hành cũ: ${oldDeparture}
+        - Thời gian khởi hành mới: ${newDeparture}
+
+        - Thời gian đến dự kiến cũ: ${oldArrival}
+        - Thời gian đến dự kiến mới: ${newArrival}
+
+        Vui lòng kiểm tra lại thông tin trên hệ thống hoặc liên hệ tổng đài để biết thêm chi tiết.
+            `;
+
+      if (emails.length > 0) {
+        sendEmail(emails, "Thông báo thay đổi chuyến bay", emailContent).catch(
+          (err) => console.error("Send email error:", err)
+        );
+      }
     } catch (error) {
       console.error("Error updating flight:", error);
       res.status(500).json({ message: "Something went wrong" });
+    }
+  },
+
+  async deleteFlight(req: Request, res: Response) {
+    try {
+      const { aircraft_id, flight_id } = req.params;
+
+      // Find the flight by ID and aircraft ID
+      const flight = await Flight.findOneAndDelete({
+        _id: flight_id,
+        aircraft_id,
+      });
+
+      if (!flight) {
+        res.status(404).json({ message: "Flight not found" });
+        return;
+      }
+
+      await Seat.deleteMany({ flight_id: flight._id });
+      const bookings = await Booking.find({ flight_id: flight._id });
+
+      await Ticket.deleteMany({
+        booking_id: { $in: bookings.map((b) => b._id) },
+      });
+
+      await Booking.deleteMany({ flight_id: flight._id });
+
+      res.status(200).json({ message: "Flight deleted successfully" });
+
+      // Notify users about the flight cancellation
+      const userIds = bookings.map((booking) => booking.user_id);
+      const users = await User.find({ _id: { $in: userIds } });
+
+      const emails = users.map((user) => user.email);
+      const depAirport = await Airport.findById(flight.ori_airport);
+      const desAirport = await Airport.findById(flight.des_airport);
+
+      const emailContent = `
+        Chuyến bay của bạn đã bị hủy:
+
+        - Mã chuyến bay: ${flight._id}
+        - Từ: ${depAirport?.city || "N/A"} (${depAirport?.name || ""})
+        - Đến: ${desAirport?.city || "N/A"} (${desAirport?.name || ""})
+
+        Vui lòng kiểm tra lại thông tin trên hệ thống hoặc liên hệ tổng đài để biết thêm chi tiết.
+      `;
+
+      if (emails.length > 0) {
+        sendEmail(emails, "Thông báo hủy chuyến bay", emailContent).catch(
+          (err) => console.error("Send email error:", err)
+        );
+      }
+    } catch (error) {
+      console.error("Error deleting flight:", error);
+      res.status(500).json({ message: "Error deleting flight" });
     }
   },
 
