@@ -250,11 +250,11 @@ const myAircraftController = {
         - Từ: ${depAirport?.city || "N/A"} (${depAirport?.name || ""})
         - Đến: ${desAirport?.city || "N/A"} (${desAirport?.name || ""})
 
-        - Thời gian khởi hành cũ: ${oldDeparture}
-        - Thời gian khởi hành mới: ${newDeparture}
+        - Thời gian khởi hành cũ: ${oldDeparture} UTC Time
+        - Thời gian khởi hành mới: ${newDeparture} UTC Time
 
-        - Thời gian đến dự kiến cũ: ${oldArrival}
-        - Thời gian đến dự kiến mới: ${newArrival}
+        - Thời gian đến dự kiến cũ: ${oldArrival} UTC Time
+        - Thời gian đến dự kiến mới: ${newArrival} UTC Time
 
         Vui lòng kiểm tra lại thông tin trên hệ thống hoặc liên hệ tổng đài để biết thêm chi tiết.
             `;
